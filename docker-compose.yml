@@ -1,0 +1,49 @@
+version: "3"
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "80:80"
+        volumes:
+            - ./:/var/www/html
+            - ./docker/apache/sites-available:/etc/apache2/sites-available
+            - ./docker/apache/conf-available:/etc/apache2/conf-available
+            - ./storage/logs:/var/www/html/storage/logs
+            - ./docker/logs/apache:/var/log/apache2
+            - ./docker/supervisor/conf:/etc/supervisor/conf.d
+        depends_on:
+            - db
+            - redis
+        networks:
+            - default
+    db:
+        image: postgres:latest
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_USER=gove
+            - POSTGRES_PASSWORD=gove
+            - POSTGRES_DB=gove
+        volumes:
+            - ./docker/postgres/:/var/lib/postgresql/data
+        depends_on:
+            - redis
+        networks:
+            - default
+    redis:
+        image: redis:latest
+        ports:
+            - "6380:6379"
+        volumes:
+            - ./docker/redis/:/data
+        networks:
+            - default
+    mailpit:
+        image: "axllent/mailpit:latest"
+        ports:
+            - "1026:1025"
+            - "8026:8025"
+        networks:
+            - default
